@@ -16,7 +16,7 @@ def fixChrName(chrName):
         return chrName
 
 def createRefList(controlFile):
-    
+    print "[INFO] Preparing reference list ..."
     refList = []
     FH_CONTROL = open(controlFile, "rU")
 
@@ -34,18 +34,40 @@ def createRefList(controlFile):
 
     FH_CONTROL.close()
     return sorted(refList)
-    
 
-def main(inputFile, outputFile, controlFile, minScore_):
+def keepOnlyCommon(inputFile_, minSamples_):
+    print "[INFO] Filtering input on only common SVs ..."
+    FH_INPUT = open(inputFile_, "rU")
+    inputFile = inputFile_ + "-onlycommon"
+    FH_OUTPUT = open(inputFile, "w")
     
+    for line in FH_INPUT:
+        if not re.search(r'^#', line):
+            splitline = line.split('\t')
+                        
+            noCases = len(splitline[10].split(':'))
+            #svScore = splitline[8]
+            
+            if noCases == minSamples_:
+                FH_OUTPUT.write(line)
+    
+    FH_INPUT.close()
+    FH_OUTPUT.close()
+    return inputFile
+
+def checkAllSVs(inputFile, outputFile_, controlFile_, minScore_, minSamples_):
+    refList = createRefList(controlFile_)
+    print "[INFO] Comparing SVs against reference control ..."
     FH_INPUT = open(inputFile, "rU")
-    FH_OUTPUT = open(outputFile, "w")
-    refList = createRefList(controlFile)
-    
+    FH_OUTPUT = open(outputFile_, "w")
+     
     nbrOfSVs = 0
     overlaps = 1
     
     for line in FH_INPUT:
+        
+        if nbrOfSVs % 1000 == 0 and nbrOfSVs > 0:
+            print "[INFO] Progress:", nbrOfSVs, "SVs compared"
         
         matched = "NA"
         
@@ -57,10 +79,11 @@ def main(inputFile, outputFile, controlFile, minScore_):
             chr2_in = fixChrName(splitline[3])
             end_in = float(splitline[4])
             
+
+            
             for ref in refList:
                              
                 if ref[0] == chr1_in:
-
                     ## Found the correct chromosome, compare start and end positions
                                         
                     ## Case I
@@ -71,7 +94,7 @@ def main(inputFile, outputFile, controlFile, minScore_):
                             overlap = str(round( (end_in-ref[1])/(end_in-start_in), 2))
                             FH_OUTPUT.write(line.rstrip("\n") + "\t" + overlap + "\n")
                         
-                            print "Match: " + str(matched) + " sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
+                            #print "Match: " + str(matched) + " sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
                     
                     ## Case II
                     elif ref[3] <= end_in and ref[3] >= start_in and ref[1] <= start_in:
@@ -81,7 +104,7 @@ def main(inputFile, outputFile, controlFile, minScore_):
                             overlap = str(round( (ref[3]-start_in)/(end_in-start_in), 2))
                             FH_OUTPUT.write(line.rstrip("\n") + "\t" + overlap + "\n")
                         
-                            print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
+                            #print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
                     
                     ## Case III
                     elif ref[1] <= start_in and ref[3] >= end_in:
@@ -91,7 +114,7 @@ def main(inputFile, outputFile, controlFile, minScore_):
                             overlap = str(1)
                             FH_OUTPUT.write(line.rstrip("\n") + "\t" + overlap + "\n")
                         
-                            print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
+                            #print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
                         
                     ## Case IV
                     elif ref[1] >= start_in and ref[3] <= end_in:
@@ -101,31 +124,45 @@ def main(inputFile, outputFile, controlFile, minScore_):
                             overlap = str(round( (ref[3]-ref[1])/(end_in-start_in), 2))
                             FH_OUTPUT.write(line.rstrip("\n") + "\t" + overlap + "\n")
                         
-                            print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
-
+                            #print "Match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
+    
             
                     ## Non-overlap
                     else:
                         #print "No match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[1]) + "-" + str(ref[3])
                         if matched == "NA":
                             matched = False
+    
+                else:
+                    if matched == "NA":
+                        matched = False
 
-                
                 
             if matched == False:
                 overlap = str(0)
-                FH_OUTPUT.write(line.rstrip("\n") + "\t" + overlap + "\n")        
-                print "No match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
+                FH_OUTPUT.write(line.rstrip("\n")[1:] + "\t" + overlap + "\n")        
+                #print "No match: sample " + str(chr1_in) + " " + str(start_in) + "-" + str(end_in) + " ref " + str(ref[0]) + " " + str(ref[1]) + "-" + str(ref[3]) + " Overlap: " + str(overlap)
                                 
             nbrOfSVs += 1
-               
-    print "\nAll done!\n"
-    print "Overlaps:", overlaps
-    print "SVs in sample file:", nbrOfSVs
-    print "Overlap percentage:", str(round(float(overlaps)/float(nbrOfSVs), 2) * 100) + "%"
+    
+    print "\n[INFO] All done!\n"
+    print "[INFO] Overlaps:", overlaps
+    print "[INFO] SVs in sample file:", nbrOfSVs
+    print "[INFO] Overlap percentage:", str(round(float(overlaps)/float(nbrOfSVs), 2) * 100) + "%\n"
                         
     FH_INPUT.close()
     FH_OUTPUT.close()
+
+def main(inputFile_, outputFile_, controlFile_, minScore_, minSamples_):
+    
+    if minSamples_ > 1:
+
+        inputFile = keepOnlyCommon(inputFile_, minSamples_)
+        checkAllSVs(inputFile, outputFile_, controlFile_, minScore_, minSamples_)
+    
+    else:
+        checkAllSVs(inputFile_, outputFile_, controlFile_, minScore_, minSamples_)
+
     
 if __name__ == '__main__':
     main()

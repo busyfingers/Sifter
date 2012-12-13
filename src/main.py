@@ -26,9 +26,9 @@ def main():
 #    argparser.add_argument("type",
 #                           help="Input file type. [bd|bdf] (BreakDancer|BreakDancer_filtered).")
 #    
-#    argparser.add_argument("-minSamples",
-#                           type=int,
-#                           help="Minimum number of samples to share an SV.")
+    argparser.add_argument("-minSamples",
+                           type=int,
+                           help="Minimum number of samples to share an SV.")
 #    
 #    argparser.add_argument("-controlID",
 #                           help="A common name or partial name that can be used to identify the control samples.")
@@ -47,7 +47,10 @@ def main():
     outputFile = args.output
     controlFile = args.control
 #    inputType = args.type
-#    minSamples = args.minSamples
+    if args.minSamples:
+        minSamples = args.minSamples
+    else:
+        minSamples = 1
 #    controlID = args.controlID
     
     if args.minScore:
@@ -62,7 +65,7 @@ def main():
     
     #if inputType == "bd":
 #        bdfilter.main(inputFile, outputFile, minSamples, controlID, controlFilter, minScore)
-    bdfilter.main(inputFile, outputFile, controlFile, minScore)
+    bdfilter.main(inputFile, outputFile, controlFile, minScore, minSamples)
         
 #    elif inputType == "bdf":
 #        bdcompare.main(inputFile, outputFile, )
