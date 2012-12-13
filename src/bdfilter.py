@@ -8,7 +8,7 @@ Created on Dec 5, 2012
 
 import re
 
-def main(inputFile, outputFile, minSamples, controlID_, controlFilter_):
+def main(inputFile, outputFile, minSamples, controlID_, controlFilter_, minScore_):
     
     FH_INPUT = open(inputFile, "rU")
     FH_OUTPUT = open(outputFile, "w")
@@ -28,15 +28,18 @@ def main(inputFile, outputFile, minSamples, controlID_, controlFilter_):
                 noControls += sample.count(controlID)
             
             noCases = len(splitline[10].split(':')) - noControls
+            svScore = splitline[8]
             
             if controlFilter:
                 if noCases == minSamples and noControls == 0:
-                    FH_OUTPUT.write(line)
+                    if svScore >= minScore_:
+                        FH_OUTPUT.write(line)
             
             else:
                 if noCases == minSamples:
-                    FH_OUTPUT.write(line)
-    
+                    if svScore >= minScore_:
+                        FH_OUTPUT.write(line)
+                        
     FH_INPUT.close()
     FH_OUTPUT.close()
     

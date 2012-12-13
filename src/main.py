@@ -32,7 +32,11 @@ def main():
     
     argparser.add_argument("-controlFilter",
                            action="store_true",
-                           help="Enable to exclude SVs that occurs in the controls.")     
+                           help="Enable to exclude SVs that occurs in the controls.")
+
+    argparser.add_argument("-minScore",
+                           type=int,
+                           help="Minimum score threshold (1-99)")
     
     args = argparser.parse_args()
     
@@ -42,13 +46,18 @@ def main():
     minSamples = args.minSamples
     controlID = args.controlID
     
+    if args.minScore:
+        minScore = args.minScore
+    else:
+        minScore = 30
+    
     if args.controlFilter:
         controlFilter = True
     else:
         controlFilter = False
     
     if inputType == "bd":
-        bdfilter.main(inputFile, outputFile, minSamples, controlID, controlFilter)
+        bdfilter.main(inputFile, outputFile, minSamples, controlID, controlFilter, minScore)
     
 #    elif inputType == "bdf":
 #        bdcompare.main(inputFile, outputFile, )
