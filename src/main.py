@@ -28,9 +28,10 @@ def main():
                            help="Minimum number of samples to share an SV.")
  
     argparser.add_argument("-known",
+                           action="append",
+                           dest="inputList",
                            help="Path to a file containing known SVs.")
-
-    
+ 
     argparser.add_argument("-minScore",
                            type=int,
                            help="Minimum score threshold (1-99)")
@@ -41,8 +42,8 @@ def main():
     outputFile = args.output
     controlFile = args.control
     
-    if args.known:
-        known = args.known
+    if args.inputList:
+        known = args.inputList
     else:
         known = 0
     

@@ -8,6 +8,7 @@ Created on Dec 5, 2012
 
 import re
 import sys
+import os
 
 results = []
 
@@ -111,10 +112,10 @@ def checkAllSVs(inputFile, outputFile_, controlFile_, minScore_, minSamples_, ty
     refList = createRefList(controlFile_, type_)
     
     if type_ == "bd":
-        print "[INFO] Comparing SVs against reference control ..."
+        print "[INFO] Comparing SVs against reference control: %s" % os.path.split(controlFile_)[1]
     
     elif type_ == "ucsc":
-        print "[INFO] Comparing SVs against known variants ..."
+        print "[INFO] Comparing SVs against known variants: %s" % os.path.split(controlFile_)[1]
 
     FH_INPUT = open(inputFile, "rU")
     
@@ -287,13 +288,15 @@ def main(inputFile_, outputFile_, controlFile_, minScore_, minSamples_, known_):
         inputFile = keepOnlyCommon(inputFile_, minSamples_)
         checkAllSVs(inputFile, outputFile_, controlFile_, minScore_, minSamples_, "bd")
         if known_:
-            checkAllSVs(inputFile, outputFile_, known_, minScore_, minSamples_, "ucsc")
+            for knownFile in known_:
+                checkAllSVs(inputFile, outputFile_, knownFile, minScore_, minSamples_, "ucsc")
         
     
     else:
         checkAllSVs(inputFile_, outputFile_, controlFile_, minScore_, minSamples_, "bd")
         if known_:
-            checkAllSVs(inputFile, outputFile_, known_, minScore_, minSamples_, "ucsc")
+            for knownFile in known_:
+                checkAllSVs(inputFile, outputFile_, knownFile, minScore_, minSamples_, "ucsc")
 
 
     writeOutput(outputFile_, results)
